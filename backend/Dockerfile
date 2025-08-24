@@ -1,5 +1,16 @@
 FROM python:3.12-slim
 
+# システムパッケージとFFmpeg、日本語フォントのインストール
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    fonts-noto-cjk \
+    fonts-ipaexfont \
+    fontconfig \
+    curl \
+    && fc-cache -fv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY . /app/

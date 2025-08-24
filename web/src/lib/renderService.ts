@@ -12,6 +12,8 @@
 
 import { VideoRecipe, VideoConfig, RenderOptions } from './recipeEngine';
 import { TTSResult } from './ttsService';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 // レンダリング関連の型定義
 export interface RenderJob {
@@ -147,12 +149,37 @@ export class RenderService {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private audioContext: AudioContext | null = null;
+  private ffmpeg: FFmpeg;
   private ffmpegLoaded = false;
 
   constructor() {
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d')!;
+    this.ffmpeg = new FFmpeg();
     this.initializeAudioContext();
+    this.initializeFFmpeg();
+  }
+
+  // FFmpeg.wasm初期化
+  private async initializeFFmpeg(): Promise<void> {
+    if (this.ffmpegLoaded) return;
+
+    try {
+      // FFmpeg WASM ファイルをCDNから読み込み
+      const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+      const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+      const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
+
+      await this.ffmpeg.load({
+        coreURL,
+        wasmURL
+      });
+
+      this.ffmpegLoaded = true;
+      console.log('FFmpeg.wasm loaded successfully');
+    } catch (error) {
+      console.error('FFmpeg.wasm loading failed:', error);
+    }
   }
 
   // イベントハンドラーの登録
@@ -578,11 +605,89 @@ export class RenderService {
   private async finalEncode(job: RenderJob): Promise<void> {
     job.currentStep = 'final-encoding';
     
-    // FFmpeg.wasmを使用した高品質エンコーディング
-    // 実際の実装では、WebMからMP4への変換など
-    
-    this.updateProgress(job, 95, 'Final encoding completed');
-    await this.delay(500);
+    if (!this.ffmpegLoaded) {
+      await this.initializeFFmpeg();
+    }
+
+    // WebMからMP4への変換とエンコーディング
+    const webmOutput = job.outputs.find(output => output.type === 'video');
+    if (!webmOutput?.url) {
+      throw new Error('No video output available for encoding');
+    }
+
+    try {
+      // FFmpeg.wasmでWebM→MP4変換
+      const webmBlob = await fetch(webmOutput.url).then(res => res.blob());
+      await this.ffmpeg.writeFile('input.webm', await fetchFile(webmBlob));
+
+      // SRT字幕ファイルも準備（必要時）
+      if (job.recipe.srtContent) {
+        const srtBlob = new Blob([job.recipe.srtContent], { type: 'text/plain' });
+        await this.ffmpeg.writeFile('subtitles.srt', await fetchFile(srtBlob));
+      }
+
+      // FFmpegコマンド実行
+      const { resolution, bitrate = '2500k', frameRate = 30 } = job.options;
+      let command = [
+        '-i', 'input.webm',
+        '-c:v', 'libx264',
+        '-preset', 'fast',
+        '-crf', '23',
+        '-r', frameRate.toString(),
+        '-s', resolution || '1920x1080',
+        '-b:v', bitrate
+      ];
+
+      // 字幕焼き込み（日本語フォント対応）
+      if (job.recipe.srtContent) {
+        command.push(
+          '-vf', 
+          `subtitles=subtitles.srt:force_style='FontName=NotoSansCJKjp-Regular,FontSize=48,OutlineColour=&H000000,Outline=3'`
+        );
+      }
+
+      command.push('output.mp4');
+
+      // 進捗監視付きでFFmpeg実行
+      this.ffmpeg.on('progress', ({ progress }) => {
+        job.progress = 80 + (progress * 0.15); // 80-95%
+        this.updateProgress(job, job.progress, `Encoding: ${Math.round(progress * 100)}%`);
+      });
+
+      await this.ffmpeg.exec(command);
+
+      // エンコード結果を取得
+      const outputData = await this.ffmpeg.readFile('output.mp4');
+      const outputBlob = new Blob([outputData], { type: 'video/mp4' });
+      const outputUrl = URL.createObjectURL(outputBlob);
+
+      // 元のWebM出力を置き換え
+      if (webmOutput.url) {
+        URL.revokeObjectURL(webmOutput.url);
+      }
+      
+      webmOutput.mimeType = 'video/mp4';
+      webmOutput.filename = webmOutput.filename.replace('.webm', '.mp4');
+      webmOutput.url = outputUrl;
+      webmOutput.size = outputBlob.size;
+
+      this.updateProgress(job, 95, 'High-quality encoding completed');
+
+    } catch (error) {
+      console.error('FFmpeg encoding failed:', error);
+      throw new Error(`Encoding failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      // 一時ファイルクリーンアップ
+      try {
+        await this.ffmpeg.deleteFile('input.webm');
+        if (job.recipe.srtContent) {
+          await this.ffmpeg.deleteFile('subtitles.srt');
+        }
+        await this.ffmpeg.deleteFile('output.mp4');
+      } catch (error) {
+        console.warn('FFmpeg cleanup failed:', error);
+      }
+    }
   }
 
   // 出力ファイル生成
