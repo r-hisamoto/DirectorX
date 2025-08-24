@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ユーザー認証必須の基本ルール
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // リソース所有者チェック
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 有効な文字列チェック
+    function isValidString(value, maxLen) {
+      return value is string && value.size() > 0 && value.size() <= maxLen;
+    }
+
+    // アセット管理
+    match /assets/{assetId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() 
+        && isValidString(resource.data.title, 200)
+        && isValidString(resource.data.source, 50)
+        && resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // レシピ管理
+    match /recipes/{recipeId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated()
+        && isValidString(resource.data.title, 200)
+        && resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // レンダリングジョブ
+    match /render_jobs/{jobId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // エクスポートジョブ
+    match /export_jobs/{exportId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // ユーザープロフィール
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // 公開設定 (将来の機能拡張用)
+    match /public/{documentId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // 管理者限定機能 (将来の機能拡張用)
+    match /admin/{documentId} {
+      allow read, write: if isAuthenticated() 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+  }
+}

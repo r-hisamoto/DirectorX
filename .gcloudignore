@@ -1,0 +1,65 @@
+# DirectorX GCloud Ignore File
+# Google Cloud Build時に除外するファイル
+
+# Git関連
+.git
+.gitignore
+.github
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 開発環境ファイル
+.env.local
+.env.development
+.env.test
+*.local
+
+# ビルド成果物 (フロントエンド)
+web/dist/
+web/build/
+web/.vite/
+
+# ログファイル
+logs/
+*.log
+
+# テスト関連
+coverage/
+.nyc_output/
+test/
+__tests__/
+*.test.js
+*.spec.js
+
+# IDE設定
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# デプロイメント関連 (循環参照防止)
+deployment/
+docs/
+README.md
+*.md
+
+# 一時ファイル
+tmp/
+temp/
+.tmp
+
+# バックアップ
+*.backup
+*.bak
+
+# OS生成ファイル
+Thumbs.db
+.DS_Store
+
+# 開発用スクリプト
+scripts/dev-*
+scripts/test-*

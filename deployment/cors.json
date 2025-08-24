@@ -1,0 +1,30 @@
+[
+  {
+    "origin": [
+      "https://directorx-production.web.app",
+      "https://directorx-production.firebaseapp.com",
+      "http://localhost:5173",
+      "http://localhost:3000"
+    ],
+    "method": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "HEAD",
+      "OPTIONS"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Range",
+      "Content-Disposition",
+      "Content-Encoding",
+      "Cache-Control",
+      "ETag",
+      "Last-Modified",
+      "Accept-Ranges"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

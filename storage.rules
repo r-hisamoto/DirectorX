@@ -1,0 +1,66 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // ユーザー認証チェック
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ファイルサイズ制限チェック
+    function isValidFileSize(maxSizeMB) {
+      return resource.size < maxSizeMB * 1024 * 1024;
+    }
+
+    // 許可されたファイル形式チェック
+    function isValidContentType(allowedTypes) {
+      return resource.contentType in allowedTypes;
+    }
+
+    // ユーザーアセット (画像、動画、音声ファイル)
+    match /users/{userId}/assets/{allPaths=**} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && isValidFileSize(100) // 100MB制限
+        && isValidContentType([
+          'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+          'video/mp4', 'video/webm', 'video/quicktime',
+          'audio/mpeg', 'audio/wav', 'audio/ogg',
+          'text/plain', 'application/json'
+        ]);
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // レンダリング出力ファイル
+    match /users/{userId}/outputs/{allPaths=**} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && isValidFileSize(500); // 500MB制限 (動画ファイル用)
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 一時ファイル (24時間後自動削除)
+    match /temp/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() 
+        && request.auth.uid == userId
+        && isValidFileSize(50); // 50MB制限
+    }
+
+    // 公開ファイル (サムネイル等)
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated()
+        && isValidFileSize(10) // 10MB制限
+        && isValidContentType([
+          'image/jpeg', 'image/png', 'image/webp'
+        ]);
+    }
+
+    // 共有ファイル (将来の機能拡張用)
+    match /shared/{allPaths=**} {
+      allow read: if true;
+      allow write: if false; // 管理者のみ (別途実装)
+    }
+  }
+}
