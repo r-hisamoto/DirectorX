@@ -128,13 +128,174 @@ app.get('/', (req, res) => {
                 </div>
               </div>
               
-              <!-- Right: Preview -->
+              <!-- Right: Preview Control -->
               <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
+                <!-- Tab Headers -->
                 <div class="p-4 border-b border-gray-200">
-                  <h2 class="text-lg font-semibold text-gray-900">プレビュー/制御</h2>
+                  <div class="flex space-x-2">
+                    <button id="tab-preview" class="tab-btn active px-3 py-1.5 text-xs font-medium rounded-md bg-blue-100 text-blue-700">
+                      👁 プレビュー
+                    </button>
+                    <button id="tab-progress" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      📊 進捗
+                    </button>
+                    <button id="tab-control" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      ⚡ 制御
+                    </button>
+                    <button id="tab-qc" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      ✅ QC
+                    </button>
+                  </div>
                 </div>
-                <div class="flex-1 p-4">
-                  <div class="text-sm text-gray-500">プレビュー機能は今後実装予定</div>
+
+                <!-- Tab Content -->
+                <div class="flex-1 p-4 overflow-y-auto">
+                  <!-- Preview Tab -->
+                  <div id="preview-content" class="tab-content">
+                    <div class="space-y-4">
+                      <!-- Video Preview -->
+                      <div class="bg-gray-900 rounded-lg p-4 text-white">
+                        <div class="aspect-video bg-gray-800 rounded flex items-center justify-center mb-4">
+                          <div class="text-center">
+                            <div class="text-4xl mb-2">👁</div>
+                            <p class="text-sm text-gray-400">プレビュー生成中...</p>
+                          </div>
+                        </div>
+                        
+                        <!-- Media Controls -->
+                        <div class="flex items-center space-x-4">
+                          <button id="play-btn" class="p-2 bg-blue-600 hover:bg-blue-700 rounded-full">
+                            ▶️
+                          </button>
+                          <button class="p-2 hover:bg-gray-700 rounded">⏮</button>
+                          <button class="p-2 hover:bg-gray-700 rounded">⏭</button>
+                          <div class="flex-1 mx-4">
+                            <div class="flex items-center space-x-2 text-xs text-gray-400">
+                              <span id="current-time">0:00</span>
+                              <div class="flex-1 bg-gray-700 rounded-full h-1">
+                                <div id="progress-bar" class="bg-blue-500 h-1 rounded-full w-0"></div>
+                              </div>
+                              <span>2:00</span>
+                            </div>
+                          </div>
+                          <button id="volume-btn" class="p-2 hover:bg-gray-700 rounded">🔊</button>
+                        </div>
+                      </div>
+                      
+                      <!-- Script Preview -->
+                      <div id="script-preview" class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-2">現在の台本</h4>
+                        <div class="text-sm text-gray-700 max-h-32 overflow-y-auto">
+                          台本がここに表示されます...
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Progress Tab -->
+                  <div id="progress-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-4 flex items-center">
+                          📊 処理進捗
+                        </h4>
+                        <div id="progress-steps" class="space-y-3">
+                          <!-- Progress steps will be populated here -->
+                        </div>
+                      </div>
+                      
+                      <!-- Statistics -->
+                      <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-blue-50 rounded-lg p-3">
+                          <div class="text-xs text-blue-600">アセット数</div>
+                          <div id="asset-count" class="text-lg font-bold text-blue-700">0</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-3">
+                          <div class="text-xs text-green-600">文字数</div>
+                          <div id="char-count" class="text-lg font-bold text-green-700">0</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Control Tab -->
+                  <div id="control-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-4">⚡ バッチ制御</h4>
+                        <div class="space-y-3">
+                          <button id="start-processing" class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium">
+                            <span>▶️</span>
+                            <span>全工程実行</span>
+                          </button>
+                          
+                          <div class="grid grid-cols-2 gap-2">
+                            <button class="flex items-center justify-center space-x-1 px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                              <span>🎧</span>
+                              <span>TTS</span>
+                            </button>
+                            <button class="flex items-center justify-center space-x-1 px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                              <span>🎬</span>
+                              <span>動画</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Settings -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">⚙️ 設定</h4>
+                        <div class="space-y-3 text-sm">
+                          <div class="flex justify-between items-center">
+                            <span class="text-gray-700">音声品質</span>
+                            <select class="px-2 py-1 border border-gray-300 rounded text-xs">
+                              <option>標準</option>
+                              <option>高音質</option>
+                            </select>
+                          </div>
+                          <div class="flex justify-between items-center">
+                            <span class="text-gray-700">動画解像度</span>
+                            <select class="px-2 py-1 border border-gray-300 rounded text-xs">
+                              <option>1080p</option>
+                              <option>720p</option>
+                              <option>4K</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- QC Tab -->
+                  <div id="qc-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-4">✅ 品質チェック結果</h4>
+                        <div id="qc-results" class="space-y-3">
+                          <!-- QC results will be populated here -->
+                        </div>
+                      </div>
+
+                      <!-- Downloads -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">📥 出力ファイル</h4>
+                        <div class="space-y-2">
+                          <button class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                            <span>台本.txt</span>
+                            <span>📥</span>
+                          </button>
+                          <button class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                            <span>字幕.srt</span>
+                            <span>📥</span>
+                          </button>
+                          <button class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 opacity-50 cursor-not-allowed">
+                            <span>動画.mp4</span>
+                            <span>⏱</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,6 +307,177 @@ app.get('/', (req, res) => {
       }
     };
     
+    function setupPreviewControlEvents() {
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remove active state from all tabs
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active', 'bg-blue-100', 'text-blue-700');
+            b.classList.add('text-gray-500');
+          });
+          
+          // Hide all tab contents
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+          });
+          
+          // Show selected tab
+          btn.classList.add('active', 'bg-blue-100', 'text-blue-700');
+          btn.classList.remove('text-gray-500');
+          
+          const tabId = btn.id.replace('tab-', '');
+          const content = document.getElementById(\`\${tabId}-content\`);
+          if (content) {
+            content.classList.remove('hidden');
+          }
+        });
+      });
+      
+      // Processing steps management
+      let processingSteps = [
+        { id: 'script', name: '台本生成', status: 'completed', icon: '📝' },
+        { id: 'tts', name: 'TTS生成', status: 'pending', icon: '🎧' },
+        { id: 'video', name: '動画生成', status: 'pending', icon: '🎬' },
+        { id: 'qc', name: '品質チェック', status: 'pending', icon: '✅' }
+      ];
+      
+      function updateProgressSteps() {
+        const container = document.getElementById('progress-steps');
+        if (!container) return;
+        
+        container.innerHTML = processingSteps.map(step => {
+          const statusIcon = step.status === 'completed' ? '✅' : 
+                           step.status === 'processing' ? '🔄' : 
+                           step.status === 'error' ? '❌' : '⏳';
+          
+          const progressWidth = step.status === 'completed' ? '100%' : 
+                              step.status === 'processing' ? '60%' : '0%';
+          
+          const progressColor = step.status === 'completed' ? 'bg-green-500' :
+                               step.status === 'processing' ? 'bg-blue-500' :
+                               step.status === 'error' ? 'bg-red-500' : 'bg-gray-300';
+          
+          return \`
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">\${statusIcon}</div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-gray-900">\${step.name}</span>
+                </div>
+                <div class="mt-1 bg-gray-200 rounded-full h-1.5">
+                  <div class="\${progressColor} h-1.5 rounded-full transition-all" style="width: \${progressWidth}"></div>
+                </div>
+              </div>
+            </div>
+          \`;
+        }).join('');
+      }
+      
+      // QC Results management
+      function updateQCResults() {
+        const container = document.getElementById('qc-results');
+        if (!container) return;
+        
+        const qcResults = [
+          { category: '台本品質', status: 'pass', message: '適切な長さと構成' },
+          { category: 'SRT形式', status: 'warning', message: '一部の行が長すぎます' },
+          { category: 'アセット品質', status: 'pass', message: '全アセットが利用可能' }
+        ];
+        
+        container.innerHTML = qcResults.map(result => {
+          const bgColor = result.status === 'pass' ? 'bg-green-50 border-green-200 text-green-700' :
+                         result.status === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+                         'bg-red-50 border-red-200 text-red-700';
+          
+          const icon = result.status === 'pass' ? '✅' : 
+                      result.status === 'warning' ? '⚠️' : '❌';
+          
+          return \`
+            <div class="p-3 rounded-lg border \${bgColor}">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="font-medium text-sm">\${result.category}</div>
+                  <div class="text-sm mt-1">\${result.message}</div>
+                </div>
+                <div class="flex-shrink-0 ml-2">\${icon}</div>
+              </div>
+            </div>
+          \`;
+        }).join('');
+      }
+      
+      // Start processing handler
+      document.getElementById('start-processing').addEventListener('click', () => {
+        console.log('Starting batch processing...');
+        
+        // Simulate TTS processing
+        processingSteps[1].status = 'processing';
+        updateProgressSteps();
+        
+        setTimeout(() => {
+          processingSteps[1].status = 'completed';
+          processingSteps[2].status = 'processing';
+          updateProgressSteps();
+        }, 3000);
+        
+        setTimeout(() => {
+          processingSteps[2].status = 'completed';
+          processingSteps[3].status = 'processing';
+          updateProgressSteps();
+        }, 8000);
+        
+        setTimeout(() => {
+          processingSteps[3].status = 'completed';
+          updateProgressSteps();
+          updateQCResults();
+          
+          // Switch to QC tab
+          document.getElementById('tab-qc').click();
+        }, 10000);
+      });
+      
+      // Media controls
+      let isPlaying = false;
+      let currentTime = 0;
+      let totalTime = 120;
+      let playInterval;
+      
+      const playBtn = document.getElementById('play-btn');
+      const progressBar = document.getElementById('progress-bar');
+      const currentTimeSpan = document.getElementById('current-time');
+      
+      playBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        playBtn.textContent = isPlaying ? '⏸️' : '▶️';
+        
+        if (isPlaying) {
+          playInterval = setInterval(() => {
+            currentTime += 1;
+            if (currentTime >= totalTime) {
+              currentTime = 0;
+              isPlaying = false;
+              playBtn.textContent = '▶️';
+              clearInterval(playInterval);
+            }
+            
+            const progress = (currentTime / totalTime) * 100;
+            progressBar.style.width = \`\${progress}%\`;
+            
+            const minutes = Math.floor(currentTime / 60);
+            const seconds = currentTime % 60;
+            currentTimeSpan.textContent = \`\${minutes}:\${seconds.toString().padStart(2, '0')}\`;
+          }, 1000);
+        } else {
+          clearInterval(playInterval);
+        }
+      });
+      
+      // Initialize
+      updateProgressSteps();
+      updateQCResults();
+    }
+
     function setupEventListeners() {
       const addUrlBtn = document.getElementById('add-url-btn');
       const urlInputSection = document.getElementById('url-input-section');
@@ -250,6 +582,9 @@ app.get('/', (req, res) => {
 2. または既存のアセットをクリック
 3. 自動で台本が生成されます！\`;
       });
+      
+      // Setup preview control events
+      setupPreviewControlEvents();
       
       // Load assets on page load
       loadAssets();
@@ -360,6 +695,27 @@ app.get('/', (req, res) => {
           statusDiv.textContent = '';
         }, 3000);
       }
+      
+      // Update preview panel
+      updatePreviewContent(script);
+      updateStatistics(1, script.length);
+    }
+    
+    function updatePreviewContent(script) {
+      const previewDiv = document.querySelector('#script-preview .text-sm');
+      if (previewDiv) {
+        const lines = script.split('\\n').slice(0, 6);
+        previewDiv.innerHTML = lines.map(line => \`<p class="mb-1">\${line}</p>\`).join('') + 
+          (script.split('\\n').length > 6 ? '<p class="text-gray-500 italic">...</p>' : '');
+      }
+    }
+    
+    function updateStatistics(assetCount, charCount) {
+      const assetCountDiv = document.getElementById('asset-count');
+      const charCountDiv = document.getElementById('char-count');
+      
+      if (assetCountDiv) assetCountDiv.textContent = assetCount;
+      if (charCountDiv) charCountDiv.textContent = charCount;
     }
 
     async function loadAssets() {

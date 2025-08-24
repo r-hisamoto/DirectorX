@@ -2,16 +2,33 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { ScriptEditor } from '@/components/ScriptEditor';
 import { AssetTray } from '@/components/AssetTray';
+import { PreviewControl } from '@/components/PreviewControl';
 import type { Asset } from '@/types/asset';
 
 export function Studio() {
   const [selectedAssets, setSelectedAssets] = useState<Asset[]>([]);
+  const [scriptContent, setScriptContent] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   
   const handleAssetSelect = (asset: Asset | Asset[]) => {
     const assetsArray = Array.isArray(asset) ? asset : [asset];
     setSelectedAssets(assetsArray);
-    // TODO: Auto-populate script editor with selected assets
     console.log('Selected assets:', assetsArray);
+  };
+
+  const handleScriptChange = (content: string) => {
+    setScriptContent(content);
+    console.log('Content changed:', content.length, 'chars');
+  };
+
+  const handleStartProcessing = () => {
+    console.log('Starting processing pipeline...');
+    setIsGenerating(true);
+    
+    // 10秒後にリセット（デモ用）
+    setTimeout(() => {
+      setIsGenerating(false);
+    }, 10000);
   };
 
   return (
@@ -38,23 +55,19 @@ export function Studio() {
               undefined
             }
             selectedAssets={selectedAssets}
-            onChange={(content) => console.log('Content changed:', content.length, 'chars')}
+            onChange={handleScriptChange}
             onGenerate={(type) => console.log('Generate:', type)}
           />
         </div>
 
         {/* Right: Preview & Controls */}
         <div className="w-96 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              プレビュー/制御
-            </h2>
-          </div>
-          <div className="flex-1 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              近似プレビュー、進捗管理、バッチ実行、QC結果
-            </div>
-          </div>
+          <PreviewControl
+            scriptContent={scriptContent}
+            selectedAssets={selectedAssets}
+            isGenerating={isGenerating}
+            onStartProcessing={handleStartProcessing}
+          />
         </div>
       </div>
     </div>
