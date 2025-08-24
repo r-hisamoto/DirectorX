@@ -1,0 +1,30 @@
+{
+  "name": "directorx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DirectorX - アプリ内完結型動画制作OS",
+  "workspaces": [
+    "web",
+    "api"
+  ],
+  "scripts": {
+    "install": "pnpm install",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "dev": "pnpm -r --parallel dev",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5",
+    "prettier": "^3.2.5",
+    "eslint": "^8.57.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
