@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { 
   FileText, 
@@ -7,7 +7,9 @@ import {
   Volume2, 
   RotateCcw,
   Save,
-  Clock 
+  Clock,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { 
   splitLineAtCursor, 
@@ -16,21 +18,58 @@ import {
   TextEditorUtils 
 } from '@/lib/shortcuts';
 import { formatSrt, textToSimpleSrt } from '@/lib/srt';
+import { generateScriptFromAssets, generateSrtFromAssets, type ScriptGenerationOptions } from '@/lib/scriptGeneration';
+
+import type { Asset } from '@/types/asset';
 
 interface ScriptEditorProps {
   initialContent?: string;
+  selectedAssets?: Asset[];
   onChange?: (content: string) => void;
   onGenerate?: (type: 'summary' | 'script' | '5ch-comments' | 'srt') => void;
 }
 
 export function ScriptEditor({ 
   initialContent = '', 
+  selectedAssets = [],
   onChange, 
   onGenerate 
 }: ScriptEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [mode, setMode] = useState<'script' | 'srt'>('script');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStyle, setGenerationStyle] = useState<'commentary' | 'news' | 'discussion' | 'narrative'>('commentary');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // アセット選択時の自動台本生成
+  useEffect(() => {
+    if (selectedAssets.length > 0) {
+      handleAutoGenerate();
+    }
+  }, [selectedAssets]);
+
+  // 自動台本生成
+  const handleAutoGenerate = async () => {
+    if (selectedAssets.length === 0) return;
+    
+    setIsGenerating(true);
+    try {
+      // 少し遅延を入れてUIの反応を見せる
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const generatedScript = generateScriptFromAssets(selectedAssets, {
+        style: generationStyle,
+        includeSourceInfo: true,
+        maxLength: 3000
+      });
+      
+      handleContentChange(generatedScript);
+    } catch (error) {
+      console.error('Script generation failed:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // テキスト変更ハンドラ
   const handleContentChange = (newContent: string) => {
@@ -97,32 +136,95 @@ export function ScriptEditor({
   });
 
   // 生成ボタンのハンドラ
-  const handleGenerate = (type: 'summary' | 'script' | '5ch-comments' | 'srt') => {
+  const handleGenerate = async (type: 'summary' | 'script' | '5ch-comments' | 'srt' | 'from-assets') => {
     onGenerate?.(type);
+    setIsGenerating(true);
     
-    // デモ用の簡単な生成
-    switch (type) {
-      case 'summary':
-        handleContentChange('# 要旨\n\n' + content.slice(0, 200) + '...\n\n## 主なポイント\n\n1. ポイント1\n2. ポイント2\n3. ポイント3');
-        break;
-      case 'script':
-        handleContentChange('# 台本タイトル\n\n## イントロ\n\nこんにちは、今回は...\n\n## 本編\n\n' + content + '\n\n## まとめ\n\n以上、ご視聴ありがとうございました。');
-        break;
-      case '5ch-comments':
-        const comments = [
-          '1 名無しさん sage 2024/01/01(月) 12:00:00.00 ID:abcd1234\nこれはいいネタだな',
-          '2 名無しさん 2024/01/01(月) 12:01:00.00 ID:efgh5678\nソース確認した。マジじゃん',
-          '3 名無しさん sage 2024/01/01(月) 12:02:00.00 ID:ijkl9012\n>>1\n詳しく頼む'
-        ];
-        handleContentChange(comments.join('\n\n'));
-        break;
-      case 'srt':
-        if (content.trim()) {
-          const srt = textToSimpleSrt(content, 120);
-          handleContentChange(srt);
-          setMode('srt');
-        }
-        break;
+    try {
+      // 少し遅延を入れてUIの反応を見せる
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      switch (type) {
+        case 'from-assets':
+          if (selectedAssets.length > 0) {
+            const generatedScript = generateScriptFromAssets(selectedAssets, {
+              style: generationStyle,
+              includeSourceInfo: true,
+              maxLength: 3000
+            });
+            handleContentChange(generatedScript);
+          }
+          break;
+          
+        case 'summary':
+          if (selectedAssets.length > 0) {
+            // アセットから要旨生成
+            const summary = generateScriptFromAssets(selectedAssets, {
+              style: 'news',
+              includeSourceInfo: false,
+              maxLength: 800
+            });
+            handleContentChange('# 要旨\n\n' + summary);
+          } else {
+            // 既存コンテンツから要旨生成
+            handleContentChange('# 要旨\n\n' + content.slice(0, 200) + '...\n\n## 主なポイント\n\n1. ポイント1\n2. ポイント2\n3. ポイント3');
+          }
+          break;
+          
+        case 'script':
+          if (selectedAssets.length > 0) {
+            const script = generateScriptFromAssets(selectedAssets, {
+              style: generationStyle,
+              includeSourceInfo: true,
+              maxLength: 3000
+            });
+            handleContentChange(script);
+          } else {
+            handleContentChange('# 台本タイトル\n\n## イントロ\n\nこんにちは、今回は...\n\n## 本編\n\n' + content + '\n\n## まとめ\n\n以上、ご視聴ありがとうございました。');
+          }
+          break;
+          
+        case '5ch-comments':
+          // 5chアセットがある場合はその内容から、ない場合はデモ生成
+          const fivechAssets = selectedAssets.filter(a => a.source === '5ch');
+          if (fivechAssets.length > 0) {
+            const comments = fivechAssets[0].metadata?.threadMetadata?.posts || [];
+            if (comments.length > 0) {
+              const formattedComments = comments.slice(0, 5).map(post => 
+                `${post.number} ${post.name} ${post.date} ID:${post.id}\n${post.content}`
+              ).join('\n\n');
+              handleContentChange(formattedComments);
+            }
+          } else {
+            const comments = [
+              '1 名無しさん sage 2024/01/01(月) 12:00:00.00 ID:abcd1234\nこれはいいネタだな',
+              '2 名無しさん 2024/01/01(月) 12:01:00.00 ID:efgh5678\nソース確認した。マジじゃん',
+              '3 名無しさん sage 2024/01/01(月) 12:02:00.00 ID:ijkl9012\n>>1\n詳しく頼む'
+            ];
+            handleContentChange(comments.join('\n\n'));
+          }
+          break;
+          
+        case 'srt':
+          if (selectedAssets.length > 0) {
+            // アセットから直接SRT生成
+            const srt = generateSrtFromAssets(selectedAssets, {
+              wordsPerMinute: 120
+            });
+            handleContentChange(srt);
+            setMode('srt');
+          } else if (content.trim()) {
+            // 既存コンテンツをSRT化
+            const srt = textToSimpleSrt(content, 120);
+            handleContentChange(srt);
+            setMode('srt');
+          }
+          break;
+      }
+    } catch (error) {
+      console.error('Generation failed:', error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -130,7 +232,7 @@ export function ScriptEditor({
     <div className="h-full flex flex-col bg-white dark:bg-gray-800">
       {/* ツールバー */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           {/* モード切り替え */}
           <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
             <button
@@ -154,36 +256,79 @@ export function ScriptEditor({
               SRT
             </button>
           </div>
+
+          {/* スタイル選択 */}
+          {selectedAssets.length > 0 && (
+            <select
+              value={generationStyle}
+              onChange={(e) => setGenerationStyle(e.target.value as any)}
+              className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="commentary">解説系</option>
+              <option value="news">ニュース系</option>
+              <option value="discussion">討論系</option>
+              <option value="narrative">物語系</option>
+            </select>
+          )}
+
+          {/* アセット選択状況 */}
+          {selectedAssets.length > 0 && (
+            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <Sparkles className="w-4 h-4 text-yellow-500" />
+              <span>{selectedAssets.length}件選択中</span>
+              {isGenerating && (
+                <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+              )}
+            </div>
+          )}
         </div>
 
         {/* 生成ボタン */}
         <div className="flex items-center space-x-2">
           {mode === 'script' ? (
             <>
+              {selectedAssets.length > 0 && (
+                <button
+                  onClick={() => handleGenerate('from-assets')}
+                  disabled={isGenerating}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-md"
+                >
+                  {isGenerating ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span>アセットから生成</span>
+                </button>
+              )}
               <button
                 onClick={() => handleGenerate('summary')}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                disabled={isGenerating}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 rounded-md"
               >
                 <FileText className="w-4 h-4" />
                 <span>要旨</span>
               </button>
               <button
                 onClick={() => handleGenerate('script')}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                disabled={isGenerating}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 rounded-md"
               >
                 <FileText className="w-4 h-4" />
                 <span>台本</span>
               </button>
               <button
                 onClick={() => handleGenerate('5ch-comments')}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                disabled={isGenerating}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 rounded-md"
               >
                 <Hash className="w-4 h-4" />
                 <span>5ch</span>
               </button>
               <button
                 onClick={() => handleGenerate('srt')}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-white bg-brand-primary hover:bg-yellow-500 rounded-md"
+                disabled={isGenerating}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm text-white bg-brand-primary hover:bg-yellow-500 disabled:opacity-50 rounded-md"
               >
                 <Scissors className="w-4 h-4" />
                 <span>SRT化</span>

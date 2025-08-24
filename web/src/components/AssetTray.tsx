@@ -23,8 +23,8 @@ import { useEntitiesStore } from '@/store/entities';
 import { assetApi } from '@/lib/api';
 
 interface AssetTrayProps {
-  onAssetSelect?: (asset: Asset) => void;
-  selectedAssets?: string[];
+  onAssetSelect?: (asset: Asset | Asset[]) => void;
+  selectedAssets?: Asset[];
   multiSelect?: boolean;
 }
 
@@ -39,6 +39,7 @@ const isValidUrl = (url: string): boolean => {
 };
 
 export function AssetTray({ onAssetSelect, selectedAssets = [], multiSelect = false }: AssetTrayProps) {
+  const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedAssets.map(a => a.id));
   const { currentWorkspace } = useEntitiesStore();
   const [urlInput, setUrlInput] = useState('');
   const [sourceType, setSourceType] = useState<AssetSource>('url');
@@ -148,8 +149,38 @@ export function AssetTray({ onAssetSelect, selectedAssets = [], multiSelect = fa
   };
 
   // アセット選択処理
-  const handleAssetClick = (asset: Asset) => {
-    onAssetSelect?.(asset);
+  const handleAssetClick = (asset: Asset, event?: React.MouseEvent) => {
+    if (multiSelect && event?.ctrlKey) {
+      // Ctrl+クリックで複数選択
+      const newSelectedIds = localSelectedIds.includes(asset.id)
+        ? localSelectedIds.filter(id => id !== asset.id)
+        : [...localSelectedIds, asset.id];
+      
+      setLocalSelectedIds(newSelectedIds);
+      
+      const newSelectedAssets = assets.filter(a => newSelectedIds.includes(a.id));
+      onAssetSelect?.(newSelectedAssets);
+    } else if (multiSelect && event?.shiftKey && localSelectedIds.length > 0) {
+      // Shift+クリックで範囲選択
+      const lastSelectedIndex = assets.findIndex(a => a.id === localSelectedIds[localSelectedIds.length - 1]);
+      const currentIndex = assets.findIndex(a => a.id === asset.id);
+      
+      if (lastSelectedIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastSelectedIndex, currentIndex);
+        const end = Math.max(lastSelectedIndex, currentIndex);
+        const rangeIds = assets.slice(start, end + 1).map(a => a.id);
+        
+        const newSelectedIds = [...new Set([...localSelectedIds, ...rangeIds])];
+        setLocalSelectedIds(newSelectedIds);
+        
+        const newSelectedAssets = assets.filter(a => newSelectedIds.includes(a.id));
+        onAssetSelect?.(newSelectedAssets);
+      }
+    } else {
+      // 通常の単一選択
+      setLocalSelectedIds([asset.id]);
+      onAssetSelect?.(asset);
+    }
   };
 
   // アセットタイプのアイコン
@@ -357,9 +388,9 @@ export function AssetTray({ onAssetSelect, selectedAssets = [], multiSelect = fa
               {assets.map((asset) => (
                 <div
                   key={asset.id}
-                  onClick={() => handleAssetClick(asset)}
+                  onClick={(event) => handleAssetClick(asset, event)}
                   className={`p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
-                    selectedAssets.includes(asset.id) 
+                    localSelectedIds.includes(asset.id) 
                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' 
                       : ''
                   }`}

@@ -33,7 +33,11 @@ export function Studio() {
         {/* Center: Script Editor */}
         <div className="flex-1 bg-white dark:bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
           <ScriptEditor
-            initialContent="# サンプル台本\n\nここに台本を入力するか、素材から生成できます。\n\nショートカットキーを使って効率的に編集しましょう：\n- ⌘+K: コマンドパレット\n- ⌘+Shift+H: 見出し挿入\n- Ctrl+Enter: 行分割\n- ⌘+Shift+P: 句読点置換\n\nSRTモードでは：\n- ⌘+Shift+F: 整形\n- ⌘++: +100ms調整\n- ⌘+-: -100ms調整"
+            initialContent={selectedAssets.length === 0 ? 
+              "# DirectorX Studio\n\n左の素材トレイからアセットを選択すると、自動で台本が生成されます。\n\n## 機能\n\n- 📱 URL貼り付けでアセット取得（5ch、X/Twitter、YouTube対応）\n- 📁 ファイルドラッグ&ドロップ\n- ✨ 選択アセットから自動台本生成\n- 📝 リアルタイム編集とショートカット\n- 🎬 日本語SRT生成\n\n## ショートカットキー\n\n- ⌘+K: コマンドパレット\n- ⌘+Shift+H: 見出し挿入\n- Ctrl+Enter: 行分割\n- ⌘+Shift+P: 句読点置換\n\n### SRTモード\n\n- ⌘+Shift+F: 整形\n- ⌘++: +100ms調整\n- ⌘+-: -100ms調整" : 
+              undefined
+            }
+            selectedAssets={selectedAssets}
             onChange={(content) => console.log('Content changed:', content.length, 'chars')}
             onGenerate={(type) => console.log('Generate:', type)}
           />
