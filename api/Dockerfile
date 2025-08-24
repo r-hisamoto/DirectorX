@@ -3,6 +3,17 @@
 # Node.js 18 LTS (slim for smaller image size)
 FROM node:18-slim
 
+# システムパッケージとFFmpeg、日本語フォントのインストール
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    fonts-noto-cjk \
+    fonts-ipaexfont \
+    fontconfig \
+    curl \
+    && fc-cache -fv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # セキュリティ: 非rootユーザー作成
 RUN groupadd -r directorx && useradd -r -g directorx directorx
 

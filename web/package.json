@@ -30,7 +30,9 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "socket.io-client": "^4.7.5",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
