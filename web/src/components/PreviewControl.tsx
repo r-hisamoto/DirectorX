@@ -25,6 +25,8 @@ import { TTSPanel } from './TTSPanel';
 import type { TTSResult } from '@/lib/ttsService';
 import { RecipePanel } from './RecipePanel';
 import type { VideoRecipe } from '@/lib/recipeEngine';
+import { RenderPanel } from './RenderPanel';
+import type { RenderJob } from '@/lib/renderService';
 
 interface PreviewControlProps {
   scriptContent?: string;
@@ -55,7 +57,7 @@ export function PreviewControl({
   isGenerating = false,
   onStartProcessing 
 }: PreviewControlProps) {
-  const [activeTab, setActiveTab] = useState<'preview' | 'progress' | 'control' | 'qc' | 'tts' | 'recipe'>('preview');
+  const [activeTab, setActiveTab] = useState<'preview' | 'progress' | 'control' | 'qc' | 'tts' | 'recipe' | 'render'>('preview');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -63,6 +65,7 @@ export function PreviewControl({
   const [ttsResult, setTTSResult] = useState<TTSResult | null>(null);
   const [ttsError, setTTSError] = useState<string>('');
   const [currentRecipe, setCurrentRecipe] = useState<VideoRecipe | null>(null);
+  const [renderJob, setRenderJob] = useState<RenderJob | null>(null);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
     {
       id: 'script',
@@ -453,6 +456,19 @@ export function PreviewControl({
     />
   );
 
+  const renderRenderTab = () => (
+    <RenderPanel
+      recipe={currentRecipe}
+      onRenderComplete={(job) => {
+        setRenderJob(job);
+        console.log('Render completed:', job);
+      }}
+      onError={(error) => {
+        console.error('Render error:', error);
+      }}
+    />
+  );
+
   const renderQCTab = () => (
     <div className="space-y-4">
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
@@ -520,6 +536,7 @@ export function PreviewControl({
             { id: 'preview', label: 'プレビュー', icon: <Eye className="w-4 h-4" /> },
             { id: 'tts', label: 'TTS', icon: <Headphones className="w-4 h-4" /> },
             { id: 'recipe', label: 'レシピ', icon: <Zap className="w-4 h-4" /> },
+            { id: 'render', label: 'レンダリング', icon: <Video className="w-4 h-4" /> },
             { id: 'progress', label: '進捗', icon: <BarChart3 className="w-4 h-4" /> },
             { id: 'control', label: '制御', icon: <Settings className="w-4 h-4" /> },
             { id: 'qc', label: 'QC', icon: <CheckCircle className="w-4 h-4" /> }
@@ -545,6 +562,7 @@ export function PreviewControl({
         {activeTab === 'preview' && renderPreviewTab()}
         {activeTab === 'tts' && renderTTSTab()}
         {activeTab === 'recipe' && renderRecipeTab()}
+        {activeTab === 'render' && renderRenderTab()}
         {activeTab === 'progress' && renderProgressTab()}
         {activeTab === 'control' && renderControlTab()}
         {activeTab === 'qc' && renderQCTab()}

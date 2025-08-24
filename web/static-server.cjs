@@ -148,6 +148,9 @@ app.get('/', (req, res) => {
                     <button id="tab-recipe" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
                       ⚡ レシピ
                     </button>
+                    <button id="tab-render" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      🎬 レンダリング
+                    </button>
                     <button id="tab-qc" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
                       ✅ QC
                     </button>
@@ -475,6 +478,135 @@ app.get('/', (req, res) => {
                         <div id="recipe-current-step" class="text-center text-sm text-gray-600 hidden">
                           <!-- 現在のステップ表示 -->
                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Render Tab -->
+                  <div id="render-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <!-- プレビューエリア -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                          👁 プレビュー
+                          <div class="flex space-x-1 ml-auto">
+                            <button id="preview-video" class="preview-mode-btn px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">動画</button>
+                            <button id="preview-audio" class="preview-mode-btn px-2 py-1 text-xs rounded text-gray-500 hover:bg-gray-100">音声</button>
+                            <button id="preview-thumbnail" class="preview-mode-btn px-2 py-1 text-xs rounded text-gray-500 hover:bg-gray-100">サムネ</button>
+                          </div>
+                        </h4>
+                        
+                        <div id="render-preview" class="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
+                          <div class="text-center text-gray-400">
+                            <div class="text-4xl mb-2">👁</div>
+                            <p class="text-sm">プレビューなし</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- レンダリング設定 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">⚙️ レンダリング設定</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">出力形式</label>
+                            <select id="render-format" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="mp4" selected>MP4</option>
+                              <option value="webm">WebM</option>
+                              <option value="mov">MOV</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">品質</label>
+                            <select id="render-quality" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="draft">ドラフト</option>
+                              <option value="standard" selected>標準</option>
+                              <option value="high">高品質</option>
+                              <option value="ultra">最高品質</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                          <label class="text-sm font-medium text-gray-700">含める要素</label>
+                          <div class="grid grid-cols-2 gap-2 mt-1">
+                            <label class="flex items-center space-x-2">
+                              <input type="checkbox" id="include-audio" checked class="rounded border-gray-300 text-red-600">
+                              <span class="text-sm">音声</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                              <input type="checkbox" id="include-subtitles" checked class="rounded border-gray-300 text-red-600">
+                              <span class="text-sm">字幕</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                              <input type="checkbox" id="include-thumbnail" checked class="rounded border-gray-300 text-red-600">
+                              <span class="text-sm">サムネイル</span>
+                            </label>
+                            <label class="flex items-center space-x-2">
+                              <input type="checkbox" id="include-script" checked class="rounded border-gray-300 text-red-600">
+                              <span class="text-sm">台本</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- レンダリング進捗 -->
+                      <div id="render-progress-section" class="bg-gray-50 rounded-lg p-4 hidden">
+                        <h4 class="font-medium text-gray-900 mb-3">🔄 レンダリング進捗</h4>
+                        <div class="mb-2">
+                          <div class="flex justify-between text-sm">
+                            <span id="render-current-step">初期化中...</span>
+                            <span id="render-progress-percent">0%</span>
+                          </div>
+                          <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                            <div id="render-progress-bar" class="bg-red-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                          </div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                          <span id="render-progress-message">準備中...</span>
+                          <span id="render-time-info">経過: 0秒</span>
+                        </div>
+                      </div>
+
+                      <!-- 出力ファイル -->
+                      <div id="render-outputs" class="bg-gray-50 rounded-lg p-4 hidden">
+                        <h4 class="font-medium text-gray-900 mb-3">📥 出力ファイル</h4>
+                        <div id="output-files" class="space-y-2">
+                          <!-- ファイル一覧が動的に追加される -->
+                        </div>
+                      </div>
+
+                      <!-- 統計情報 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">📊 統計情報</h4>
+                        <div class="space-y-2 text-sm text-gray-600">
+                          <div class="flex justify-between">
+                            <span>レシピ:</span>
+                            <span id="render-recipe-title">-</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span>推定時間:</span>
+                            <span id="render-estimated-time">-</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span>解像度:</span>
+                            <span id="render-resolution">-</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span>フレームレート:</span>
+                            <span id="render-framerate">-</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- レンダリングボタン -->
+                      <div class="space-y-2">
+                        <button id="start-render-btn" class="w-full px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-300 font-medium" disabled>
+                          🎬 レンダリング開始
+                        </button>
+                        <p id="render-status-message" class="text-xs text-gray-500 text-center">
+                          レシピタブでレシピを作成してください
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1463,6 +1595,340 @@ app.get('/', (req, res) => {
       updateRecipeStats();
     }
 
+    // レンダリングの設定
+    function setupRenderEvents() {
+      let isRendering = false;
+      let currentRenderJob = null;
+      let renderOutputs = [];
+      let previewMode = 'video';
+      
+      // プレビューモード切り替え
+      document.querySelectorAll('.preview-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // 選択状態のリセット
+          document.querySelectorAll('.preview-mode-btn').forEach(b => {
+            b.classList.remove('bg-blue-100', 'text-blue-700');
+            b.classList.add('text-gray-500');
+          });
+          
+          // 新しい選択
+          btn.classList.add('bg-blue-100', 'text-blue-700');
+          btn.classList.remove('text-gray-500');
+          
+          previewMode = btn.id.replace('preview-', '');
+          updateRenderPreview();
+        });
+      });
+      
+      // レンダリング開始ボタン
+      document.getElementById('start-render-btn').addEventListener('click', () => {
+        if (isRendering) return;
+        
+        // レシピの確認
+        if (!currentRecipe) {
+          alert('レシピが作成されていません。\\nレシピタブでレシピを作成してください。');
+          return;
+        }
+        
+        startRendering();
+      });
+      
+      // レンダリング実行
+      async function startRendering() {
+        isRendering = true;
+        const startBtn = document.getElementById('start-render-btn');
+        const progressSection = document.getElementById('render-progress-section');
+        const statusMessage = document.getElementById('render-status-message');
+        
+        startBtn.textContent = '🔄 レンダリング中...';
+        startBtn.disabled = true;
+        progressSection.classList.remove('hidden');
+        statusMessage.textContent = '';
+        
+        // レンダリングステップの定義
+        const renderSteps = [
+          { name: 'キャンバス設定', duration: 1000 },
+          { name: '音声準備', duration: 800 },
+          { name: 'フレーム生成', duration: 3000 },
+          { name: '動画合成', duration: 2500 },
+          { name: '音声合成', duration: 1500 },
+          { name: '最終エンコード', duration: 2000 },
+          { name: 'ファイル出力', duration: 1000 }
+        ];
+        
+        let totalProgress = 0;
+        const stepWeight = 100 / renderSteps.length;
+        
+        try {
+          for (let i = 0; i < renderSteps.length; i++) {
+            const step = renderSteps[i];
+            
+            updateRenderProgress(step.name, totalProgress, step.name + '中...');
+            
+            // ステップ実行シミュレーション
+            await simulateRenderStep(step, (progress) => {
+              const currentStepProgress = totalProgress + (progress * stepWeight / 100);
+              updateRenderProgress(step.name, currentStepProgress, step.name + '中...');
+            });
+            
+            totalProgress += stepWeight;
+          }
+          
+          // レンダリング完了
+          updateRenderProgress('完了', 100, 'レンダリングが完了しました！');
+          
+          // 出力ファイル生成
+          generateRenderOutputs();
+          
+          // 完了状態に更新
+          startBtn.textContent = '✅ 完了';
+          startBtn.disabled = false;
+          
+          setTimeout(() => {
+            startBtn.textContent = '🎬 レンダリング開始';
+            progressSection.classList.add('hidden');
+          }, 3000);
+          
+        } catch (error) {
+          updateRenderProgress('エラー', 0, 'レンダリングでエラーが発生しました');
+          startBtn.textContent = '🎬 レンダリング開始';
+          startBtn.disabled = false;
+          
+          setTimeout(() => {
+            progressSection.classList.add('hidden');
+          }, 3000);
+        }
+        
+        isRendering = false;
+      }
+      
+      // レンダリングステップシミュレーション
+      function simulateRenderStep(step, onProgress) {
+        return new Promise((resolve) => {
+          const intervals = 20;
+          const intervalTime = step.duration / intervals;
+          let progress = 0;
+          
+          const interval = setInterval(() => {
+            progress += 100 / intervals;
+            onProgress(Math.min(progress, 100));
+            
+            if (progress >= 100) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, intervalTime);
+        });
+      }
+      
+      // プログレス更新
+      function updateRenderProgress(step, progress, message) {
+        document.getElementById('render-current-step').textContent = step;
+        document.getElementById('render-progress-percent').textContent = Math.round(progress) + '%';
+        document.getElementById('render-progress-bar').style.width = progress + '%';
+        document.getElementById('render-progress-message').textContent = message;
+        
+        // 経過時間更新（簡易版）
+        const timeInfo = document.getElementById('render-time-info');
+        if (timeInfo) {
+          const elapsed = Math.floor(Date.now() / 1000) % 3600; // デモ用
+          timeInfo.textContent = `経過: ${elapsed}秒`;
+        }
+      }
+      
+      // 出力ファイル生成
+      function generateRenderOutputs() {
+        renderOutputs = [
+          {
+            type: 'video',
+            filename: currentRecipe.title.replace(/[^a-zA-Z0-9]/g, '_') + '.mp4',
+            size: '15.2 MB',
+            icon: '🎬',
+            color: 'text-blue-500'
+          },
+          {
+            type: 'audio',
+            filename: currentRecipe.title.replace(/[^a-zA-Z0-9]/g, '_') + '.mp3',
+            size: '2.1 MB',
+            icon: '🎵',
+            color: 'text-green-500'
+          },
+          {
+            type: 'subtitle',
+            filename: currentRecipe.title.replace(/[^a-zA-Z0-9]/g, '_') + '.srt',
+            size: '1.5 KB',
+            icon: '📝',
+            color: 'text-purple-500'
+          },
+          {
+            type: 'thumbnail',
+            filename: currentRecipe.title.replace(/[^a-zA-Z0-9]/g, '_') + '_thumb.png',
+            size: '245 KB',
+            icon: '🖼️',
+            color: 'text-orange-500'
+          },
+          {
+            type: 'script',
+            filename: currentRecipe.title.replace(/[^a-zA-Z0-9]/g, '_') + '_script.txt',
+            size: '2.8 KB',
+            icon: '📄',
+            color: 'text-gray-500'
+          }
+        ];
+        
+        const outputsSection = document.getElementById('render-outputs');
+        const outputFilesList = document.getElementById('output-files');
+        
+        outputFilesList.innerHTML = renderOutputs.map(output => `
+          <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+              <span class="${output.color}">${output.icon}</span>
+              <div>
+                <div class="font-medium text-sm">${output.filename}</div>
+                <div class="text-xs text-gray-500">${output.size}</div>
+              </div>
+            </div>
+            <button onclick="downloadRenderFile('${output.filename}')" class="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              📥 DL
+            </button>
+          </div>
+        `).join('');
+        
+        outputsSection.classList.remove('hidden');
+        updateRenderPreview();
+      }
+      
+      // プレビュー更新
+      function updateRenderPreview() {
+        const previewDiv = document.getElementById('render-preview');
+        
+        if (renderOutputs.length === 0) {
+          previewDiv.innerHTML = `
+            <div class="text-center text-gray-400">
+              <div class="text-4xl mb-2">👁</div>
+              <p class="text-sm">プレビューなし</p>
+            </div>
+          `;
+          return;
+        }
+        
+        switch (previewMode) {
+          case 'video':
+            previewDiv.innerHTML = `
+              <div class="w-full h-full bg-black rounded-lg flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="text-6xl mb-4">🎬</div>
+                  <p class="text-sm">動画プレビュー</p>
+                  <p class="text-xs text-gray-300 mt-1">${currentRecipe ? currentRecipe.title : ''}</p>
+                  <div class="mt-4 flex justify-center space-x-2">
+                    <button class="px-3 py-1 bg-blue-600 rounded text-xs">▶️ 再生</button>
+                    <button class="px-3 py-1 bg-gray-600 rounded text-xs">⏸️ 停止</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            break;
+            
+          case 'audio':
+            previewDiv.innerHTML = `
+              <div class="w-full h-full bg-gradient-to-br from-purple-900 to-blue-900 rounded-lg flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="text-6xl mb-4">🎵</div>
+                  <p class="text-sm">音声プレビュー</p>
+                  <div class="mt-4 w-48 h-2 bg-white bg-opacity-30 rounded-full mx-auto">
+                    <div class="h-full bg-white rounded-full w-1/3"></div>
+                  </div>
+                  <p class="text-xs mt-2">00:45 / 02:15</p>
+                </div>
+              </div>
+            `;
+            break;
+            
+          case 'thumbnail':
+            previewDiv.innerHTML = `
+              <div class="w-full h-full bg-gray-800 rounded-lg flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="text-6xl mb-4">🖼️</div>
+                  <p class="text-sm">サムネイルプレビュー</p>
+                  <div class="mt-4 w-32 h-20 bg-gray-600 rounded mx-auto flex items-center justify-center">
+                    <span class="text-xs">1920x1080</span>
+                  </div>
+                </div>
+              </div>
+            `;
+            break;
+        }
+      }
+      
+      // レシピ更新時の統計情報更新
+      const updateRenderStats = () => {
+        const titleElement = document.getElementById('render-recipe-title');
+        const timeElement = document.getElementById('render-estimated-time');
+        const resolutionElement = document.getElementById('render-resolution');
+        const framerateElement = document.getElementById('render-framerate');
+        const startBtn = document.getElementById('start-render-btn');
+        const statusMessage = document.getElementById('render-status-message');
+        
+        if (currentRecipe) {
+          titleElement.textContent = currentRecipe.title;
+          timeElement.textContent = Math.ceil(currentRecipe.scriptContent.length * 0.2) + '秒';
+          resolutionElement.textContent = currentRecipe.resolution || '1920x1080';
+          framerateElement.textContent = (currentRecipe.frameRate || 30) + ' FPS';
+          
+          startBtn.disabled = false;
+          statusMessage.textContent = '設定を確認してレンダリングを開始してください';
+        } else {
+          titleElement.textContent = '-';
+          timeElement.textContent = '-';
+          resolutionElement.textContent = '-';
+          framerateElement.textContent = '-';
+          
+          startBtn.disabled = true;
+          statusMessage.textContent = 'レシピタブでレシピを作成してください';
+        }
+      };
+      
+      // 初期統計更新
+      updateRenderStats();
+      
+      // レシピ変更の監視（グローバル変数を監視）
+      setInterval(() => {
+        updateRenderStats();
+      }, 1000);
+    }
+
+    // ダウンロード関数（グローバル）
+    window.downloadRenderFile = function(filename) {
+      // 実際の実装では、ファイルのBlobURLを使用
+      const link = document.createElement('a');
+      link.download = filename;
+      
+      // デモ用のダミーデータ作成
+      let content = '';
+      if (filename.includes('.txt') || filename.includes('.srt')) {
+        content = currentRecipe ? currentRecipe.scriptContent || 'デモファイル内容' : 'デモファイル内容';
+      } else {
+        content = 'バイナリファイル（デモ）';
+      }
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      
+      // ダウンロード完了メッセージ
+      const statusMessage = document.getElementById('render-status-message');
+      if (statusMessage) {
+        statusMessage.textContent = `✅ ${filename} をダウンロードしました`;
+        statusMessage.className = 'text-xs text-green-600 text-center';
+        
+        setTimeout(() => {
+          statusMessage.textContent = '設定を確認してレンダリングを開始してください';
+          statusMessage.className = 'text-xs text-gray-500 text-center';
+        }, 3000);
+      }
+    };
+
     // Start the app
     mockApp.render();
     
@@ -1470,6 +1936,7 @@ app.get('/', (req, res) => {
     setTimeout(() => {
       setupTTSEvents();
       setupRecipeEvents();
+      setupRenderEvents();
     }, 100);
   </script>
 </body>
