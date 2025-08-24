@@ -142,6 +142,12 @@ app.get('/', (req, res) => {
                     <button id="tab-control" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
                       ⚡ 制御
                     </button>
+                    <button id="tab-tts" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      🎧 TTS
+                    </button>
+                    <button id="tab-recipe" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
+                      ⚡ レシピ
+                    </button>
                     <button id="tab-qc" class="tab-btn px-3 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:bg-gray-100">
                       ✅ QC
                     </button>
@@ -266,6 +272,213 @@ app.get('/', (req, res) => {
                     </div>
                   </div>
 
+                  <!-- TTS Tab -->
+                  <div id="tts-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <!-- Voice Selection -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">🎧 音声選択</h4>
+                        <div class="space-y-2">
+                          <div class="text-xs text-gray-600 mb-1">男性音声</div>
+                          <div class="grid grid-cols-1 gap-1">
+                            <button id="voice-male-1" class="voice-btn text-left px-2 py-1.5 rounded text-xs border border-gray-200 hover:bg-gray-50 text-gray-700">
+                              <div class="font-medium">日本語男性音声</div>
+                              <div class="text-gray-500 text-xs">ja-JP</div>
+                            </button>
+                          </div>
+                          
+                          <div class="text-xs text-gray-600 mb-1 mt-3">女性音声</div>
+                          <div class="grid grid-cols-1 gap-1">
+                            <button id="voice-female-1" class="voice-btn text-left px-2 py-1.5 rounded text-xs border border-gray-200 hover:bg-gray-50 text-gray-700 border-blue-300 bg-blue-50 text-blue-700">
+                              <div class="font-medium">日本語女性音声</div>
+                              <div class="text-gray-500 text-xs">ja-JP</div>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- TTS Settings -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">⚙️ 音声設定</h4>
+                        <div class="space-y-2">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-700">速度</span>
+                            <div class="flex items-center space-x-2">
+                              <input id="tts-rate" type="range" min="0.5" max="2.0" step="0.1" value="1.0" class="w-16 h-1">
+                              <span id="tts-rate-value" class="text-xs text-gray-500 w-8">1.0</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-700">ピッチ</span>
+                            <div class="flex items-center space-x-2">
+                              <input id="tts-pitch" type="range" min="0.5" max="2.0" step="0.1" value="1.0" class="w-16 h-1">
+                              <span id="tts-pitch-value" class="text-xs text-gray-500 w-8">1.0</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Preview -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">🎤 プレビュー</h4>
+                        <div class="bg-white rounded p-3 mb-3">
+                          <div id="tts-preview-text" class="text-sm text-gray-700">
+                            台本がここに表示されます...
+                          </div>
+                        </div>
+                        <div class="flex space-x-2">
+                          <button id="tts-preview-play" class="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium">
+                            <span>▶️</span>
+                            <span>試聴</span>
+                          </button>
+                          <button id="tts-preview-stop" class="flex items-center space-x-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs font-medium">
+                            <span>⏹</span>
+                            <span>停止</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Generate -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">📄 音声生成</h4>
+                        <button id="tts-generate" class="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                          <span>🎧</span>
+                          <span>音声生成開始</span>
+                        </button>
+                        <div id="tts-status" class="mt-2 text-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recipe Tab -->
+                  <div id="recipe-content" class="tab-content hidden">
+                    <div class="space-y-4">
+                      <!-- 基本設定 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">⚙️ 基本設定</h4>
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">動画タイトル</label>
+                            <input type="text" id="video-title" value="新しい動画" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm">
+                          </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">説明</label>
+                            <textarea id="video-description" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" placeholder="動画の説明（オプション）"></textarea>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- テンプレート選択 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">📋 テンプレート</h4>
+                        <div class="space-y-2">
+                          <div class="template-option p-3 border border-purple-300 bg-purple-50 rounded-lg cursor-pointer" data-template="news-style">
+                            <div class="font-medium text-sm">ニュース風テンプレート</div>
+                            <div class="text-xs text-gray-600 mt-1">情報系動画に最適なシンプルなテンプレート</div>
+                          </div>
+                          <div class="template-option p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-purple-300" data-template="commentary">
+                            <div class="font-medium text-sm">解説動画テンプレート</div>
+                            <div class="text-xs text-gray-600 mt-1">解説系コンテンツ向けの読みやすいテンプレート</div>
+                          </div>
+                          <div class="template-option p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-purple-300" data-template="social-media">
+                            <div class="font-medium text-sm">SNS投稿紹介テンプレート</div>
+                            <div class="text-xs text-gray-600 mt-1">X/Twitter、5ch等のSNS内容を紹介する動画用</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 動画設定 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">🎬 動画設定</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">解像度</label>
+                            <select id="resolution-select" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="1280x720">HD (720p)</option>
+                              <option value="1920x1080" selected>Full HD (1080p)</option>
+                              <option value="3840x2160">4K (2160p)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">フレームレート</label>
+                            <select id="framerate-select" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="30" selected>30 FPS</option>
+                              <option value="60">60 FPS</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">品質</label>
+                            <select id="quality-select" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="draft">ドラフト</option>
+                              <option value="standard" selected>標準</option>
+                              <option value="high">高品質</option>
+                              <option value="ultra">最高品質</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">出力形式</label>
+                            <select id="format-select" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                              <option value="mp4" selected>MP4</option>
+                              <option value="webm">WebM</option>
+                              <option value="mov">MOV</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- レシピ状態 -->
+                      <div id="recipe-status" class="bg-gray-50 rounded-lg p-4 hidden">
+                        <h4 class="font-medium text-gray-900 mb-3">📊 レシピ状態</h4>
+                        <div class="bg-white rounded-lg p-3 mb-3">
+                          <div class="text-sm font-medium text-gray-900 mb-1" id="recipe-title-display">-</div>
+                          <div class="text-xs text-gray-600" id="recipe-details">-</div>
+                        </div>
+                        
+                        <!-- ステップ進行状況 -->
+                        <div id="recipe-steps" class="space-y-2">
+                          <div class="text-sm font-medium text-gray-900">進行状況</div>
+                          <div class="space-y-1" id="recipe-step-list">
+                            <!-- ステップが動的に追加される -->
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 統計情報 -->
+                      <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-3">📈 統計情報</h4>
+                        <div class="space-y-2 text-sm text-gray-600">
+                          <div class="flex justify-between">
+                            <span>アセット数:</span>
+                            <span id="recipe-asset-count">0</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span>台本文字数:</span>
+                            <span id="recipe-char-count">0</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span>推定動画長:</span>
+                            <span id="recipe-estimated-duration">-</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- アクションボタン -->
+                      <div class="space-y-2">
+                        <button id="create-recipe-btn" class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium">
+                          📋 レシピ作成
+                        </button>
+                        <button id="execute-recipe-btn" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 text-sm font-medium" disabled>
+                          🎬 動画生成実行
+                        </button>
+                        <div id="recipe-current-step" class="text-center text-sm text-gray-600 hidden">
+                          <!-- 現在のステップ表示 -->
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- QC Tab -->
                   <div id="qc-content" class="tab-content hidden">
                     <div class="space-y-4">
@@ -307,6 +520,166 @@ app.get('/', (req, res) => {
       }
     };
     
+    function setupTTSEvents() {
+      let selectedVoice = null;
+      let ttsRate = 1.0;
+      let ttsPitch = 1.0;
+      let ttsGenerated = false;
+      
+      // Voice selection
+      document.querySelectorAll('.voice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remove selection from all voices
+          document.querySelectorAll('.voice-btn').forEach(b => {
+            b.classList.remove('border-blue-300', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-gray-200', 'text-gray-700');
+          });
+          
+          // Select clicked voice
+          btn.classList.add('border-blue-300', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-gray-200', 'text-gray-700');
+          
+          selectedVoice = btn.id.includes('female') ? 'female' : 'male';
+          console.log('Selected voice:', selectedVoice);
+        });
+      });
+      
+      // TTS settings sliders
+      const rateSlider = document.getElementById('tts-rate');
+      const rateValue = document.getElementById('tts-rate-value');
+      const pitchSlider = document.getElementById('tts-pitch');
+      const pitchValue = document.getElementById('tts-pitch-value');
+      
+      rateSlider.addEventListener('input', (e) => {
+        ttsRate = parseFloat(e.target.value);
+        rateValue.textContent = ttsRate.toFixed(1);
+      });
+      
+      pitchSlider.addEventListener('input', (e) => {
+        ttsPitch = parseFloat(e.target.value);
+        pitchValue.textContent = ttsPitch.toFixed(1);
+      });
+      
+      // Preview play
+      document.getElementById('tts-preview-play').addEventListener('click', () => {
+        const previewText = document.getElementById('tts-preview-text').textContent;
+        
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(previewText);
+          
+          // Apply settings
+          utterance.rate = ttsRate;
+          utterance.pitch = ttsPitch;
+          utterance.volume = 1.0;
+          
+          // Try to select appropriate voice
+          const voices = speechSynthesis.getVoices();
+          const japaneseVoice = voices.find(voice => 
+            voice.lang.startsWith('ja') && 
+            (selectedVoice === 'female' ? 
+              voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('kyoko') :
+              voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('takeshi'))
+          ) || voices.find(voice => voice.lang.startsWith('ja'));
+          
+          if (japaneseVoice) {
+            utterance.voice = japaneseVoice;
+          }
+          
+          speechSynthesis.speak(utterance);
+        } else {
+          alert('お使いのブラウザはWeb Speech APIに対応していません');
+        }
+      });
+      
+      // Preview stop
+      document.getElementById('tts-preview-stop').addEventListener('click', () => {
+        if ('speechSynthesis' in window) {
+          speechSynthesis.cancel();
+        }
+      });
+      
+      // TTS Generate
+      document.getElementById('tts-generate').addEventListener('click', () => {
+        const statusDiv = document.getElementById('tts-status');
+        const generateBtn = document.getElementById('tts-generate');
+        
+        if (!selectedVoice) {
+          statusDiv.textContent = '❌ 音声を選択してください';
+          statusDiv.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+        
+        const scriptArea = document.getElementById('script-area');
+        if (!scriptArea || !scriptArea.value.trim()) {
+          statusDiv.textContent = '❌ 台本が入力されていません';
+          statusDiv.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+        
+        // Start generation
+        statusDiv.textContent = '🔄 音声生成中...';
+        statusDiv.className = 'mt-2 text-sm text-blue-600';
+        generateBtn.disabled = true;
+        
+        // Simulate TTS generation
+        setTimeout(() => {
+          ttsGenerated = true;
+          statusDiv.textContent = '✅ 音声生成完了！';
+          statusDiv.className = 'mt-2 text-sm text-green-600';
+          generateBtn.disabled = false;
+          
+          // Update processing steps
+          processingSteps[1].status = 'completed';
+          updateProgressSteps();
+          
+          // Switch to progress tab
+          document.getElementById('tab-progress').click();
+        }, 3000);
+      });
+      
+      // Update preview text when script changes
+      const observer = new MutationObserver(() => {
+        const scriptArea = document.getElementById('script-area');
+        if (scriptArea) {
+          const previewDiv = document.getElementById('tts-preview-text');
+          if (previewDiv && scriptArea.value) {
+            const lines = scriptArea.value.split('\\n').filter(line => 
+              line.trim() && !line.startsWith('#')
+            ).slice(0, 2);
+            const preview = lines.join(' ').slice(0, 100);
+            previewDiv.textContent = preview + (preview.length >= 100 ? '...' : '');
+          }
+        }
+      });
+      
+      // Observe script area changes
+      setTimeout(() => {
+        const scriptArea = document.getElementById('script-area');
+        if (scriptArea) {
+          observer.observe(scriptArea, { 
+            attributes: true, 
+            childList: true, 
+            subtree: true,
+            characterData: true 
+          });
+          
+          scriptArea.addEventListener('input', () => {
+            const previewDiv = document.getElementById('tts-preview-text');
+            if (previewDiv && scriptArea.value) {
+              const lines = scriptArea.value.split('\\n').filter(line => 
+                line.trim() && !line.startsWith('#')
+              ).slice(0, 2);
+              const preview = lines.join(' ').slice(0, 100);
+              previewDiv.textContent = preview + (preview.length >= 100 ? '...' : '');
+            }
+          });
+        }
+      }, 1000);
+      
+      // Initialize default selection
+      document.getElementById('voice-female-1').click();
+    }
+
     function setupPreviewControlEvents() {
       // Tab switching
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -760,8 +1133,344 @@ app.get('/', (req, res) => {
       }
     }
     
+    // TTS関連の設定
+    function setupTTSEvents() {
+      const voiceSelect = document.getElementById('voice-select');
+      const rateSlider = document.getElementById('rate-slider');
+      const pitchSlider = document.getElementById('pitch-slider');
+      const volumeSlider = document.getElementById('volume-slider');
+      const rateValue = document.getElementById('rate-value');
+      const pitchValue = document.getElementById('pitch-value');
+      const volumeValue = document.getElementById('volume-value');
+      const previewBtn = document.getElementById('preview-tts-btn');
+      const generateTtsBtn = document.getElementById('generate-tts-btn');
+      
+      // 音声一覧の初期化
+      function loadVoices() {
+        const voices = window.speechSynthesis.getVoices();
+        const japaneseVoices = voices.filter(voice => voice.lang.startsWith('ja'));
+        
+        voiceSelect.innerHTML = '<option value="">音声を選択してください</option>';
+        
+        if (japaneseVoices.length > 0) {
+          japaneseVoices.forEach((voice, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(option);
+          });
+        } else {
+          voiceSelect.innerHTML = '<option value="">日本語音声が利用できません</option>';
+        }
+      }
+      
+      // 音声読み込み（ブラウザによって遅延が必要）
+      if (window.speechSynthesis) {
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+          speechSynthesis.onvoiceschanged = loadVoices;
+        }
+      }
+      
+      // スライダーの値表示更新
+      rateSlider.addEventListener('input', () => {
+        rateValue.textContent = rateSlider.value;
+      });
+      
+      pitchSlider.addEventListener('input', () => {
+        pitchValue.textContent = pitchSlider.value;
+      });
+      
+      volumeSlider.addEventListener('input', () => {
+        volumeValue.textContent = volumeSlider.value;
+      });
+      
+      // プレビュー再生
+      previewBtn.addEventListener('click', () => {
+        const selectedVoiceIndex = voiceSelect.value;
+        if (!selectedVoiceIndex) {
+          alert('音声を選択してください');
+          return;
+        }
+        
+        const voices = window.speechSynthesis.getVoices();
+        const japaneseVoices = voices.filter(voice => voice.lang.startsWith('ja'));
+        const selectedVoice = japaneseVoices[parseInt(selectedVoiceIndex)];
+        
+        const utterance = new SpeechSynthesisUtterance('これはプレビューテストです。音声の設定を確認してください。');
+        utterance.voice = selectedVoice;
+        utterance.rate = parseFloat(rateSlider.value);
+        utterance.pitch = parseFloat(pitchSlider.value);
+        utterance.volume = parseFloat(volumeSlider.value);
+        
+        // 既存の音声を停止
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+        
+        previewBtn.textContent = '再生中...';
+        previewBtn.disabled = true;
+        
+        utterance.onend = () => {
+          previewBtn.textContent = 'プレビュー再生';
+          previewBtn.disabled = false;
+        };
+        
+        utterance.onerror = () => {
+          previewBtn.textContent = 'プレビュー再生';
+          previewBtn.disabled = false;
+          alert('音声再生でエラーが発生しました');
+        };
+      });
+      
+      // TTS生成（実際のAPIではなくデモ用）
+      generateTtsBtn.addEventListener('click', () => {
+        const scriptArea = document.getElementById('script-area');
+        const content = scriptArea.value;
+        
+        if (!content.trim()) {
+          alert('台本が入力されていません');
+          return;
+        }
+        
+        const selectedVoiceIndex = voiceSelect.value;
+        if (!selectedVoiceIndex) {
+          alert('音声を選択してください');
+          return;
+        }
+        
+        generateTtsBtn.textContent = '生成中...';
+        generateTtsBtn.disabled = true;
+        
+        // デモ用の処理（実際は音声ファイル生成）
+        setTimeout(() => {
+          generateTtsBtn.textContent = 'TTS音声生成';
+          generateTtsBtn.disabled = false;
+          
+          // プレビューコントロールに結果を表示
+          const processingSteps = document.getElementById('processing-steps');
+          if (processingSteps) {
+            const ttsStep = processingSteps.querySelector('[data-step="tts"]');
+            if (ttsStep) {
+              const status = ttsStep.querySelector('.status');
+              const duration = ttsStep.querySelector('.duration');
+              
+              if (status) status.textContent = '完了';
+              if (duration) duration.textContent = '推定 120.5秒';
+              
+              ttsStep.className = 'flex justify-between items-center p-2 bg-green-50 border border-green-200 rounded';
+            }
+          }
+          
+          alert('TTS音声生成が完了しました（デモ）\\n\\n実際の実装では音声ファイルが生成されます。');
+        }, 2000);
+      });
+    }
+
+    // レシピエンジンの設定
+    function setupRecipeEvents() {
+      let currentRecipe = null;
+      let selectedTemplate = 'news-style';
+      
+      // テンプレート選択
+      document.querySelectorAll('.template-option').forEach(option => {
+        option.addEventListener('click', () => {
+          // 選択状態のリセット
+          document.querySelectorAll('.template-option').forEach(opt => {
+            opt.classList.remove('border-purple-300', 'bg-purple-50');
+            opt.classList.add('border-gray-200');
+          });
+          
+          // 新しい選択
+          option.classList.add('border-purple-300', 'bg-purple-50');
+          option.classList.remove('border-gray-200');
+          
+          selectedTemplate = option.dataset.template;
+          console.log('Selected template:', selectedTemplate);
+        });
+      });
+      
+      // レシピ作成ボタン
+      document.getElementById('create-recipe-btn').addEventListener('click', () => {
+        const scriptArea = document.getElementById('script-area');
+        const videoTitle = document.getElementById('video-title').value;
+        const videoDescription = document.getElementById('video-description').value;
+        
+        if (!scriptArea || !scriptArea.value.trim()) {
+          alert('台本が入力されていません');
+          return;
+        }
+        
+        // レシピオブジェクト作成
+        currentRecipe = {
+          id: `recipe_${Date.now()}`,
+          title: videoTitle,
+          description: videoDescription,
+          template: selectedTemplate,
+          scriptContent: scriptArea.value,
+          resolution: document.getElementById('resolution-select').value,
+          frameRate: document.getElementById('framerate-select').value,
+          quality: document.getElementById('quality-select').value,
+          format: document.getElementById('format-select').value,
+          createdAt: new Date(),
+          steps: [
+            { id: 'validate-assets', name: 'アセット検証', status: 'pending', progress: 0 },
+            { id: 'generate-srt', name: 'SRT生成', status: 'pending', progress: 0 },
+            { id: 'generate-tts', name: 'TTS音声生成', status: 'pending', progress: 0 },
+            { id: 'prepare-media', name: 'メディア準備', status: 'pending', progress: 0 },
+            { id: 'video-composition', name: '動画合成', status: 'pending', progress: 0 },
+            { id: 'generate-thumbnail', name: 'サムネイル生成', status: 'pending', progress: 0 },
+            { id: 'quality-check', name: '品質チェック', status: 'pending', progress: 0 },
+            { id: 'export-files', name: 'ファイル出力', status: 'pending', progress: 0 }
+          ]
+        };
+        
+        // レシピ状態表示の更新
+        const recipeStatus = document.getElementById('recipe-status');
+        const recipeTitleDisplay = document.getElementById('recipe-title-display');
+        const recipeDetails = document.getElementById('recipe-details');
+        const executeBtn = document.getElementById('execute-recipe-btn');
+        
+        recipeStatus.classList.remove('hidden');
+        recipeTitleDisplay.textContent = currentRecipe.title;
+        recipeDetails.textContent = `作成: ${currentRecipe.createdAt.toLocaleString()} | テンプレート: ${selectedTemplate}`;
+        executeBtn.disabled = false;
+        
+        // ステップ表示の更新
+        const stepList = document.getElementById('recipe-step-list');
+        stepList.innerHTML = currentRecipe.steps.map(step => `
+          <div class="flex items-center gap-3 step-item" data-step-id="${step.id}">
+            <div class="flex-shrink-0">
+              <div class="step-icon w-4 h-4 rounded-full bg-gray-300"></div>
+            </div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-sm font-medium step-name">${step.name}</span>
+                <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 step-status">待機中</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-1.5">
+                <div class="step-progress bg-gray-300 h-1.5 rounded-full w-0"></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+        // 統計情報更新
+        document.getElementById('recipe-asset-count').textContent = '1';
+        document.getElementById('recipe-char-count').textContent = currentRecipe.scriptContent.length;
+        document.getElementById('recipe-estimated-duration').textContent = Math.ceil(currentRecipe.scriptContent.length * 0.2) + '秒';
+        
+        alert('レシピが作成されました！\\n\\n「動画生成実行」ボタンで処理を開始できます。');
+      });
+      
+      // レシピ実行ボタン
+      document.getElementById('execute-recipe-btn').addEventListener('click', () => {
+        if (!currentRecipe) {
+          alert('レシピが作成されていません');
+          return;
+        }
+        
+        const executeBtn = document.getElementById('execute-recipe-btn');
+        const currentStepDiv = document.getElementById('recipe-current-step');
+        
+        executeBtn.disabled = true;
+        executeBtn.textContent = '🔄 実行中...';
+        currentStepDiv.classList.remove('hidden');
+        
+        // ステップを順次実行（デモ用シミュレーション）
+        executeRecipeSteps(currentRecipe, 0);
+      });
+      
+      // レシピステップ実行のシミュレーション
+      function executeRecipeSteps(recipe, stepIndex) {
+        if (stepIndex >= recipe.steps.length) {
+          // 全ステップ完了
+          const executeBtn = document.getElementById('execute-recipe-btn');
+          const currentStepDiv = document.getElementById('recipe-current-step');
+          
+          executeBtn.disabled = false;
+          executeBtn.textContent = '✅ 完了';
+          currentStepDiv.textContent = '🎉 動画生成完了！';
+          
+          setTimeout(() => {
+            executeBtn.textContent = '🎬 動画生成実行';
+            currentStepDiv.classList.add('hidden');
+          }, 3000);
+          
+          return;
+        }
+        
+        const step = recipe.steps[stepIndex];
+        const stepElement = document.querySelector(`[data-step-id="${step.id}"]`);
+        const stepIcon = stepElement.querySelector('.step-icon');
+        const stepStatus = stepElement.querySelector('.step-status');
+        const stepProgress = stepElement.querySelector('.step-progress');
+        const currentStepDiv = document.getElementById('recipe-current-step');
+        
+        // ステップ開始
+        step.status = 'running';
+        stepIcon.className = 'step-icon w-4 h-4 rounded-full bg-blue-500';
+        stepStatus.textContent = '実行中';
+        stepStatus.className = 'text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600 step-status';
+        currentStepDiv.textContent = `${step.name}: 0%`;
+        
+        // プログレスバーアニメーション
+        const duration = Math.random() * 2000 + 1000; // 1-3秒
+        const intervals = 20;
+        const intervalTime = duration / intervals;
+        let progress = 0;
+        
+        const progressInterval = setInterval(() => {
+          progress += 100 / intervals;
+          step.progress = Math.min(progress, 100);
+          stepProgress.style.width = `${step.progress}%`;
+          stepProgress.className = 'step-progress bg-blue-500 h-1.5 rounded-full';
+          currentStepDiv.textContent = `${step.name}: ${Math.round(step.progress)}%`;
+          
+          if (progress >= 100) {
+            clearInterval(progressInterval);
+            
+            // ステップ完了
+            step.status = 'completed';
+            stepIcon.className = 'step-icon w-4 h-4 rounded-full bg-green-500';
+            stepStatus.textContent = '完了';
+            stepStatus.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-600 step-status';
+            stepProgress.className = 'step-progress bg-green-500 h-1.5 rounded-full';
+            
+            // 次のステップへ
+            setTimeout(() => {
+              executeRecipeSteps(recipe, stepIndex + 1);
+            }, 300);
+          }
+        }, intervalTime);
+      }
+      
+      // 初期統計情報の更新
+      const updateRecipeStats = () => {
+        const scriptArea = document.getElementById('script-area');
+        if (scriptArea) {
+          document.getElementById('recipe-char-count').textContent = scriptArea.value.length;
+          document.getElementById('recipe-estimated-duration').textContent = Math.ceil(scriptArea.value.length * 0.2) + '秒';
+        }
+      };
+      
+      // 台本変更時の統計更新
+      const scriptArea = document.getElementById('script-area');
+      if (scriptArea) {
+        scriptArea.addEventListener('input', updateRecipeStats);
+      }
+      
+      // 初期状態の統計更新
+      updateRecipeStats();
+    }
+
     // Start the app
     mockApp.render();
+    
+    // Initialize TTS events after DOM is ready
+    setTimeout(() => {
+      setupTTSEvents();
+      setupRecipeEvents();
+    }, 100);
   </script>
 </body>
 </html>`;

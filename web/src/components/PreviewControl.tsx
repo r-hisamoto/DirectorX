@@ -21,6 +21,10 @@ import {
   Zap
 } from 'lucide-react';
 import type { Asset } from '@/types/asset';
+import { TTSPanel } from './TTSPanel';
+import type { TTSResult } from '@/lib/ttsService';
+import { RecipePanel } from './RecipePanel';
+import type { VideoRecipe } from '@/lib/recipeEngine';
 
 interface PreviewControlProps {
   scriptContent?: string;
@@ -51,11 +55,14 @@ export function PreviewControl({
   isGenerating = false,
   onStartProcessing 
 }: PreviewControlProps) {
-  const [activeTab, setActiveTab] = useState<'preview' | 'progress' | 'control' | 'qc'>('preview');
+  const [activeTab, setActiveTab] = useState<'preview' | 'progress' | 'control' | 'qc' | 'tts' | 'recipe'>('preview');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(120); // 2分のデモ
+  const [ttsResult, setTTSResult] = useState<TTSResult | null>(null);
+  const [ttsError, setTTSError] = useState<string>('');
+  const [currentRecipe, setCurrentRecipe] = useState<VideoRecipe | null>(null);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([
     {
       id: 'script',
@@ -163,44 +170,63 @@ export function PreviewControl({
     }
   };
 
-  const handleStartProcessing = () => {
-    // TTS処理開始のシミュレーション
+  // TTS関連のハンドラ
+  const handleTTSGenerated = (result: TTSResult) => {
+    setTTSResult(result);
+    setTTSError('');
+    
+    // TTS完了ステップを更新
     setProcessingSteps(prev => prev.map(step => 
       step.id === 'tts' 
-        ? { ...step, status: 'processing' }
+        ? { ...step, status: 'completed', duration: result.totalDuration }
         : step
     ));
+    
+    console.log('TTS generated:', result);
+  };
 
-    // 3秒後にTTS完了
-    setTimeout(() => {
-      setProcessingSteps(prev => prev.map(step => 
-        step.id === 'tts' 
-          ? { ...step, status: 'completed', duration: 8.7 }
-          : step.id === 'video'
-          ? { ...step, status: 'processing' }
-          : step
-      ));
-    }, 3000);
+  const handleTTSError = (error: string) => {
+    setTTSError(error);
+    setProcessingSteps(prev => prev.map(step => 
+      step.id === 'tts' 
+        ? { ...step, status: 'error' }
+        : step
+    ));
+  };
 
-    // 8秒後に動画完了
-    setTimeout(() => {
+  const handleStartProcessing = () => {
+    // TTS生成状況に応じて処理開始
+    if (ttsResult) {
+      // TTS完了済みの場合は動画生成から開始
       setProcessingSteps(prev => prev.map(step => 
         step.id === 'video' 
-          ? { ...step, status: 'completed', duration: 45.2 }
-          : step.id === 'qc'
           ? { ...step, status: 'processing' }
           : step
       ));
-    }, 8000);
 
-    // 10秒後にQC完了
-    setTimeout(() => {
-      setProcessingSteps(prev => prev.map(step => 
-        step.id === 'qc' 
-          ? { ...step, status: 'completed', duration: 2.1 }
-          : step
-      ));
-    }, 10000);
+      // 5秒後に動画完了
+      setTimeout(() => {
+        setProcessingSteps(prev => prev.map(step => 
+          step.id === 'video' 
+            ? { ...step, status: 'completed', duration: 45.2 }
+            : step.id === 'qc'
+            ? { ...step, status: 'processing' }
+            : step
+        ));
+      }, 5000);
+
+      // 7秒後にQC完了
+      setTimeout(() => {
+        setProcessingSteps(prev => prev.map(step => 
+          step.id === 'qc' 
+            ? { ...step, status: 'completed', duration: 2.1 }
+            : step
+        ));
+      }, 7000);
+    } else {
+      // TTS未生成の場合はTTSタブに誘導
+      setActiveTab('tts');
+    }
 
     onStartProcessing?.();
   };
@@ -340,13 +366,28 @@ export function PreviewControl({
         </h4>
         
         <div className="space-y-3">
+          {/* TTS状況表示 */}
+          {ttsResult ? (
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded text-sm text-green-700 dark:text-green-300">
+              ✅ TTS生成完了 ({ttsResult.segments.length}セグメント)
+            </div>
+          ) : ttsError ? (
+            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-red-700 dark:text-red-300">
+              ❌ TTS生成エラー
+            </div>
+          ) : scriptContent ? (
+            <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm text-yellow-700 dark:text-yellow-300">
+              ⚠️ TTSタブで音声を生成してください
+            </div>
+          ) : null}
+
           <button
             onClick={handleStartProcessing}
             disabled={!scriptContent.trim() || isGenerating}
             className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-md text-sm font-medium"
           >
             <Play className="w-4 h-4" />
-            <span>全工程実行</span>
+            <span>{ttsResult ? '動画生成開始' : '全工程実行'}</span>
           </button>
           
           <div className="grid grid-cols-2 gap-2">
@@ -388,6 +429,28 @@ export function PreviewControl({
         </div>
       </div>
     </div>
+  );
+
+  const renderTTSTab = () => (
+    <TTSPanel
+      scriptContent={scriptContent}
+      onAudioGenerated={handleTTSGenerated}
+      onError={handleTTSError}
+    />
+  );
+
+  const renderRecipeTab = () => (
+    <RecipePanel
+      assetIds={selectedAssets.map(asset => asset.id)}
+      scriptContent={scriptContent}
+      onRecipeComplete={(recipe) => {
+        setCurrentRecipe(recipe);
+        console.log('Recipe completed:', recipe);
+      }}
+      onError={(error) => {
+        console.error('Recipe error:', error);
+      }}
+    />
   );
 
   const renderQCTab = () => (
@@ -455,6 +518,8 @@ export function PreviewControl({
         <div className="flex space-x-2">
           {[
             { id: 'preview', label: 'プレビュー', icon: <Eye className="w-4 h-4" /> },
+            { id: 'tts', label: 'TTS', icon: <Headphones className="w-4 h-4" /> },
+            { id: 'recipe', label: 'レシピ', icon: <Zap className="w-4 h-4" /> },
             { id: 'progress', label: '進捗', icon: <BarChart3 className="w-4 h-4" /> },
             { id: 'control', label: '制御', icon: <Settings className="w-4 h-4" /> },
             { id: 'qc', label: 'QC', icon: <CheckCircle className="w-4 h-4" /> }
@@ -478,6 +543,8 @@ export function PreviewControl({
       {/* タブコンテンツ */}
       <div className="flex-1 p-4 overflow-y-auto">
         {activeTab === 'preview' && renderPreviewTab()}
+        {activeTab === 'tts' && renderTTSTab()}
+        {activeTab === 'recipe' && renderRecipeTab()}
         {activeTab === 'progress' && renderProgressTab()}
         {activeTab === 'control' && renderControlTab()}
         {activeTab === 'qc' && renderQCTab()}
