@@ -30,6 +30,9 @@ app.use(helmet({
         "'self'",
         process.env.API_URL || 'http://localhost:8000',
         process.env.STORAGE_URL || '',
+        // Allow WebSocket connections for Socket.IO (ws/wss)
+        'ws:',
+        'wss:',
       ].filter(Boolean),
     },
   },
