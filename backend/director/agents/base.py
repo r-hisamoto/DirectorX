@@ -77,5 +77,5 @@ class BaseAgent(ABC):
             return AgentResponse(status=AgentStatus.ERROR, message=str(e))
 
     @abstractmethod
-    def run(*args, **kwargs) -> AgentResponse:
+    def run(self, *args, **kwargs) -> AgentResponse:
         pass
