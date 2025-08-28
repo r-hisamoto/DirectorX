@@ -9,19 +9,29 @@ from director.llm.videodb_proxy import VideoDBProxy
 
 
 def get_default_llm():
-    """Get default LLM"""
+    """Select the default LLM based on env configuration.
+
+    Priority: explicit `DEFAULT_LLM` value -> available API keys -> VideoDB proxy.
+    """
 
     openai = True if os.getenv("OPENAI_API_KEY") else False
     anthropic = True if os.getenv("ANTHROPIC_API_KEY") else False
     googleai = True if os.getenv("GOOGLEAI_API_KEY") else False
 
-    default_llm = os.getenv("DEFAULT_LLM")
+    default_llm = (os.getenv("DEFAULT_LLM") or "").strip().lower()
 
-    if openai or default_llm == LLMType.OPENAI:
+    if default_llm in (str(LLMType.OPENAI), "openai"):
         return OpenAI()
-    elif anthropic or default_llm == LLMType.ANTHROPIC:
+    if default_llm in (str(LLMType.ANTHROPIC), "anthropic"):
         return AnthropicAI()
-    elif googleai or default_llm == LLMType.GOOGLEAI:
+    if default_llm in (str(LLMType.GOOGLEAI), "googleai", "gemini"):
         return GoogleAI()
-    else:
-        return VideoDBProxy()
+
+    if openai:
+        return OpenAI()
+    if anthropic:
+        return AnthropicAI()
+    if googleai:
+        return GoogleAI()
+
+    return VideoDBProxy()

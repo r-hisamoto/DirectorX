@@ -41,7 +41,7 @@ def get_session(session_id):
     Get or delete the session details
     """
     if not session_id:
-        return {"message": f"Please provide {session_id}."}, 400
+        return {"message": "Please provide session_id."}, 400
 
     session_handler = SessionHandler(
         db=load_db(os.getenv("SERVER_DB_TYPE", app.config["DB_TYPE"]))

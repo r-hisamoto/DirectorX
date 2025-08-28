@@ -92,6 +92,6 @@ if os.getenv("DEVZERY_API_KEY") and os.getenv("DEVZERY_SOURCE_NAME"):
 if __name__ == "__main__":
     app.run(
         host=os.getenv("SERVER_HOST", app.config["HOST"]),
-        port=os.getenv("SERVER_PORT", app.config["PORT"]),
+        port=int(os.getenv("SERVER_PORT", app.config["PORT"])),
         reloader_type="stat",
     )

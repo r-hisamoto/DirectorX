@@ -38,7 +38,7 @@ class AnthropicAIConfig(BaseLLMConfig):
     def validate_non_empty(cls, v, info: FieldValidationInfo):
         if not v:
             raise ValueError(
-                f"{info.field_name} must not be empty. please set {EnvPrefix.OPENAI_.value}{info.field_name.upper()} environment variable."
+                f"{info.field_name} must not be empty. please set {EnvPrefix.ANTHROPIC_.value}{info.field_name.upper()} environment variable."
             )
         return v
 
@@ -157,7 +157,8 @@ class AnthropicAI(BaseLLM):
         try:
             response = self.client.messages.create(**params)
         except Exception as e:
-            raise e
+            # Keep error handling consistent with other LLM clients
+            print(f"Error: {e}")
             return LLMResponse(content=f"Error: {e}")
 
         return LLMResponse(

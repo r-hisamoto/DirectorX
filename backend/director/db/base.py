@@ -22,8 +22,22 @@ class BaseDB(ABC):
         pass
 
     @abstractmethod
-    def add_or_update_msg_to_conv() -> None:
-        """Add a new message (input or output) to the conversation."""
+    def add_or_update_msg_to_conv(
+        self,
+        session_id: str,
+        conv_id: str,
+        msg_id: str,
+        msg_type: str,
+        agents: list,
+        actions: list,
+        content: list,
+        status: str | None = None,
+        created_at: int | None = None,
+        updated_at: int | None = None,
+        metadata: dict = {},
+        **kwargs,
+    ) -> None:
+        """Add or update a message (input or output) in the conversation history."""
         pass
 
     @abstractmethod
