@@ -3,7 +3,7 @@ name = "director"
 version = "0.1.0"
 description = "Director backend."
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 dependencies = [
     "flask==3.0.3",
     "flask-socketio==5.3.6",
@@ -14,7 +14,6 @@ dependencies = [
     "python-dotenv==1.0.1",
     "videodb",
     "yt-dlp==2024.10.7",
-    "director",
 ]
 
 
