@@ -81,13 +81,17 @@ configs = dict(local=LocalAppConfig, production=ProductionAppConfig)
 app = create_app(app_config=configs[os.getenv("SERVER_ENV", "local")])
 
 if os.getenv("DEVZERY_API_KEY") and os.getenv("DEVZERY_SOURCE_NAME"):
-    from devzery import Devzery
-    devzery = Devzery(
-        api_key=os.getenv("DEVZERY_API_KEY"),
-        source_name=os.getenv("DEVZERY_SOURCE_NAME")
-    )
+    try:
+        from devzery import Devzery
 
-    devzery.flask_middleware(app)
+        devzery = Devzery(
+            api_key=os.getenv("DEVZERY_API_KEY"),
+            source_name=os.getenv("DEVZERY_SOURCE_NAME"),
+        )
+        devzery.flask_middleware(app)
+    except ImportError:
+        # Devzery is optional; ignore if not installed
+        pass
 
 if __name__ == "__main__":
     app.run(
