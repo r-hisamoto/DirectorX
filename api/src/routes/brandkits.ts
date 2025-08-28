@@ -224,7 +224,7 @@ router.delete('/:id', async (req: Request, res: Response<ApiResponse<void>>) => 
     
     brandkits.delete(id);
     
-    res.status(204).json({
+    res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),
     });
