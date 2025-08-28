@@ -59,6 +59,6 @@ def handle_validation_exception(error):
     resp.response = json.dumps(
         {"status": "error", "message": str(error), "detail": error.errors()}
     )
-    resp.status = 400
+    resp.status_code = 400
     resp.mimetype = "application/json"
     return resp
