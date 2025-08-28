@@ -178,10 +178,13 @@ def upload_video(collection_id):
                 media_type=media_type,
                 name=file_name,
             )
-        elif "source" in request.json:
-            source = request.json["source"]
-            source_type = request.json["source_type"]
-            return videodb.upload(source=source, source_type=source_type)
+        elif request.is_json and isinstance(request.json, dict) and "source" in request.json:
+            source = request.json.get("source")
+            source_type = request.json.get("source_type", "url")
+            media_type = request.json.get("media_type", "video")
+            if not source:
+                return {"message": "source is required"}, 400
+            return videodb.upload(source=source, source_type=source_type, media_type=media_type)
         else:
             return {"message": "No valid source provided"}, 400
     except Exception as e:
