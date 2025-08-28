@@ -46,15 +46,23 @@ class BaseDB(ABC):
         pass
 
     @abstractmethod
-    def get_context_messages(self, session_id: str) -> list:
-        """Get context messages for a session."""
+    def get_context_messages(self, session_id: str) -> dict:
+        """Get context messages for a session.
+
+        Should return a dict payload (e.g., {"reasoning": [...]}) suitable for
+        `Session.get_context_messages()` which accesses `.get("reasoning", [])`.
+        """
         pass
 
     @abstractmethod
     def add_or_update_context_msg(
-        self, session_id: str, context_messages: list
+        self, session_id: str, context_messages: dict
     ) -> None:
-        """Update context messages for a session."""
+        """Update context messages for a session.
+
+        Expects a dict payload (for example: {"reasoning": [...]}) which will be
+        stored in the DB as JSON.
+        """
         pass
 
     @abstractmethod
